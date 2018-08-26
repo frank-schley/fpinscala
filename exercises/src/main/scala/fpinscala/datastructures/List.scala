@@ -122,5 +122,44 @@ object List { // `List` companion object. Contains functions for creating and wo
 
   def reverse[A](l: List[A]): List[A] = foldLeft(l, Nil:List[A])((acc: List[A], a:A) => Cons(a, acc))
 
-  def map[A,B](l: List[A])(f: A => B): List[B] = ???
+  def map[A,B](l: List[A])(f: A => B): List[B] = foldRight(l, Nil:List[B])((a:A, acc:List[B]) => Cons(f(a), acc))
+
+
+  def concat[A](ls: List[List[A]]): List[A] = {
+    foldRight(ls, List[A]())((l:List[A], as:List[A]) => append(l, as))
+  }
+
+  def flatMap[A, B](as: List[A])(f: A => List[B]): List[B] = {
+    foldRight(as, List[B]())((a:A, bs:List[B]) => append(f(a), bs))
+  }
+
+  def filter[A](as: List[A])(f: A => Boolean): List[A] = {
+
+    def to_list_with_filter(a: A): List[A] = {
+      if(f(a)) List[A](a)
+      else List[A]()
+    }
+
+    flatMap(as)(to_list_with_filter)
+  }
+
+  def zipWith[A, B, C](as: List[A], bs: List[B])(f: (A, B) => C): List[C] = (as, bs) match {
+    case (Nil, _) => Nil
+    case (_, Nil) => Nil
+    case (Cons(ha, ta), Cons(hb, tb)) => Cons(f(ha, hb), zipWith(ta, tb)(f))
+  }
+
+  def startsWith[A](sub: List[A], as: List[A]): Boolean = (sub, as) match {
+    case (Nil, _) => true
+    case (_, Nil) => false
+    case (Cons(hsub, tsub), Cons(has, tas)) => {
+      if(hsub == has) startsWith(tsub, tas)
+      else false
+    }
+  }
+
+  def hasSubSequence[A](sub: List[A], as: List[A]): Boolean = {
+    if(startsWith(sub, as)) true
+    else hasSubSequence(sub, tail(as))
+  }
 }
